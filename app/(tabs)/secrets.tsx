@@ -1,54 +1,78 @@
 import FabMenu from '@/components/ui/FabMenu';
 import { useTheme } from '@/hooks/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
+import { usePreventScreenCapture } from 'expo-screen-capture';
 import NoteEditorOverlay from '@/components/ui/NoteEditorOverlay';
-import React, { useState } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { AppState, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-type Note = {
+type SecretNote = {
   id: string;
   title: string;
   content: string;
 };
 
-export default function HomeScreen() {
-  const [notes, setNotes] = useState<Note[]>([
+import PinEntryScreen from '@/components/ui/PinEntryScreen';
+
+export default function SecretsScreen() {
+  usePreventScreenCapture();
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [appState, setAppState] = useState(AppState.currentState);
+  const { colors } = useTheme();
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        // Run when switching tabs (unfocusing screen)
+        setIsAuthenticated(false);
+      };
+    }, [])
+  );
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      setAppState(nextAppState);
+      // Lock if app goes to background or becomes inactive
+      if (nextAppState === 'background' || nextAppState === 'inactive') {
+        setIsAuthenticated(false);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
+  // Provide a completely blank screen when the app is inactive (recent apps menu)
+  if (appState !== 'active') {
+    return <View style={styles.container} />;
+  }
+
+  const [secretNotes, setSecretNotes] = useState<SecretNote[]>([
     {
       id: '1',
-      title: 'Grocery list',
-      content: 'Milk, eggs, bread, fruit, vegetables, snacks, coffee',
+      title: 'Bank Passwords',
+      content: 'Chase: 1234\nBoA: 5678',
     },
     {
       id: '2',
-      title: 'Workout plan',
-      content: 'Mon: Chest & triceps\nWed: Back & biceps\nFri: Legs & shoulders',
+      title: 'Crypto Seed Phrase',
+      content: 'apple banana cherry dog elephant fox grape hat ice jelly kite lemon',
     },
     {
       id: '3',
-      title: 'Ideas',
-      content: 'Build a notes app clone with colorful tiles and simple UX.',
-    },
-    {
-      id: '4',
-      title: 'Meeting notes',
-      content: 'Discuss roadmap, priorities, and deadlines for Q2 features.',
-    },
-    {
-      id: '5',
-      title: 'Books to read',
-      content: 'Atomic Habits, Deep Work, Clean Code, The Pragmatic Programmer',
-    },
-    {
-      id: '6',
-      title: 'Travel checklist',
-      content: 'Passport, tickets, charger, headphones, toiletries, camera',
+      title: 'Private Journal',
+      content: 'Today was a productive day. I finally managed to finish that app I was working on.',
     },
   ]);
 
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [selectedNote, setSelectedNote] = useState<SecretNote | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
-  const handleOpenNote = (note: Note) => {
+
+  const handleOpenNote = (note: SecretNote) => {
     setEditTitle(note.title);
     setEditContent(note.content);
     setSelectedNote(note);
@@ -65,7 +89,7 @@ export default function HomeScreen() {
 
   const handleCloseNote = () => {
     if (!selectedNote) return;
-    setNotes((prevNotes) => {
+    setSecretNotes((prevNotes) => {
       const exists = prevNotes.some((n) => n.id === selectedNote.id);
       const isBlank = !editTitle.trim() && !editContent.trim();
       if (exists) {
@@ -81,7 +105,7 @@ export default function HomeScreen() {
     setSelectedNote(null);
   };
 
-  const renderNote = ({ item }: { item: Note }) => {
+  const renderNote = ({ item }: { item: SecretNote }) => {
     return (
       <TouchableOpacity activeOpacity={0.8} style={styles.noteTile} onPress={() => handleOpenNote(item)}>
         <Text style={styles.noteTitle} numberOfLines={1}>
@@ -94,16 +118,18 @@ export default function HomeScreen() {
     );
   };
 
-  const { colors } = useTheme();
+  if (!isAuthenticated) {
+    return <PinEntryScreen onUnlock={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.appTitle, { color: colors.text }]}>Notes</Text>
+        <Text style={[styles.appTitle, { color: colors.text }]}>Secrets</Text>
       </View>
 
       <FlatList
-        data={notes}
+        data={secretNotes}
         keyExtractor={(item) => item.id}
         renderItem={renderNote}
         numColumns={2}
@@ -115,7 +141,7 @@ export default function HomeScreen() {
       {/* Fab Menu */}
       <FabMenu onNewNote={handleNewNote} />
 
-      {/* Full Screen Editable Note Overlay */}
+      {/* Full Screen Editable Secret Overlay */}
       <NoteEditorOverlay
         selectedNote={selectedNote}
         editTitle={editTitle}
@@ -123,6 +149,7 @@ export default function HomeScreen() {
         editContent={editContent}
         setEditContent={setEditContent}
         onClose={handleCloseNote}
+        contentPlaceholder="Secret Content"
       />
     </View>
   );
