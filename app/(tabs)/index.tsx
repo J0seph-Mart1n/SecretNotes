@@ -1,8 +1,8 @@
 import FabMenu from '@/components/ui/FabMenu';
-import { useTheme } from '@/hooks/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from 'expo-router';
 import NoteEditorOverlay from '@/components/ui/NoteEditorOverlay';
-import React, { useState } from 'react';
+import { useTheme } from '@/hooks/ThemeContext';
+import React, { useState, useEffect } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type Note = {
@@ -45,7 +45,19 @@ export default function HomeScreen() {
     },
   ]);
 
+  const navigation = useNavigation();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const { colors } = useTheme();
+
+  useEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: selectedNote ? { display: 'none' } : {
+        backgroundColor: colors.card,
+        borderTopColor: colors.border,
+      },
+    });
+  }, [selectedNote, navigation, colors]);
+
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
   const handleOpenNote = (note: Note) => {
@@ -94,7 +106,7 @@ export default function HomeScreen() {
     );
   };
 
-  const { colors } = useTheme();
+
 
   return (
     <View style={styles.container}>

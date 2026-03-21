@@ -1,11 +1,10 @@
 import FabMenu from '@/components/ui/FabMenu';
-import { useTheme } from '@/hooks/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
-import { usePreventScreenCapture } from 'expo-screen-capture';
 import NoteEditorOverlay from '@/components/ui/NoteEditorOverlay';
+import { useTheme } from '@/hooks/ThemeContext';
+import { useFocusEffect, useNavigation } from 'expo-router';
+import { usePreventScreenCapture } from 'expo-screen-capture';
 import React, { useCallback, useEffect, useState } from 'react';
-import { AppState, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { AppState, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 type SecretNote = {
   id: string;
@@ -68,7 +67,18 @@ export default function SecretsScreen() {
     },
   ]);
 
+  const navigation = useNavigation();
   const [selectedNote, setSelectedNote] = useState<SecretNote | null>(null);
+
+  useEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: selectedNote ? { display: 'none' } : {
+        backgroundColor: colors.card,
+        borderTopColor: colors.border,
+      },
+    });
+  }, [selectedNote, navigation, colors]);
+
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
 
