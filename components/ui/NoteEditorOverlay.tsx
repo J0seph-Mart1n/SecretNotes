@@ -106,6 +106,7 @@ export default function NoteEditorOverlay({
 const styles = StyleSheet.create({
   editorOverlay: {
     backgroundColor: '#121212',
+    zIndex: 100,
   },
   editorSafeArea: {
     flex: 1,
