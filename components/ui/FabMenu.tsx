@@ -8,15 +8,38 @@ type FabMenuProps = {
 
 export default function FabMenu({ onNewNote }: FabMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const animation = useRef(new Animated.Value(0)).current;
+  const animation = useRef(new Animated.Value(0)).current; // Background and FAB rotation
+  const b1 = useRef(new Animated.Value(0)).current; // Drawing (top)
+  const b2 = useRef(new Animated.Value(0)).current; // List (middle)
+  const b3 = useRef(new Animated.Value(0)).current; // Notes (bottom)
 
   useEffect(() => {
+    const toVal = isMenuOpen ? 1 : 0;
+    
+    // Animate background overlay & fab rotation immediately
     Animated.spring(animation, {
-      toValue: isMenuOpen ? 1 : 0,
+      toValue: toVal,
       useNativeDriver: true,
       friction: 6,
-      tension: 60,
+      tension: 20,
     }).start();
+
+    // Trigger staggered delays for the bubbles
+    if (isMenuOpen) {
+      // Open: Bottom (b3) pops first, then middle (b2), then top (b1)
+      Animated.stagger(60, [
+        Animated.spring(b3, { toValue: 1, useNativeDriver: true, friction: 5, tension: 40 }),
+        Animated.spring(b2, { toValue: 1, useNativeDriver: true, friction: 5, tension: 40 }),
+        Animated.spring(b1, { toValue: 1, useNativeDriver: true, friction: 5, tension: 40 }),
+      ]).start();
+    } else {
+      // Close: Top (b1) closes first, then middle (b2), then bottom (b3)
+      Animated.stagger(40, [
+        Animated.spring(b1, { toValue: 0, useNativeDriver: true, friction: 6, tension: 20 }),
+        Animated.spring(b2, { toValue: 0, useNativeDriver: true, friction: 6, tension: 20 }),
+        Animated.spring(b3, { toValue: 0, useNativeDriver: true, friction: 6, tension: 20 }),
+      ]).start();
+    }
   }, [isMenuOpen]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -43,10 +66,9 @@ export default function FabMenu({ onNewNote }: FabMenuProps) {
         <Animated.View style={[
           styles.bubbleWrapper,
           {
-            opacity: animation,
+            opacity: b1,
             transform: [
-              { translateY: animation.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
-              { scale: animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }
+              { scale: b1.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }
             ]
           }
         ]}>
@@ -59,10 +81,9 @@ export default function FabMenu({ onNewNote }: FabMenuProps) {
         <Animated.View style={[
           styles.bubbleWrapper,
           {
-            opacity: animation,
+            opacity: b2,
             transform: [
-              { translateY: animation.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) },
-              { scale: animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }
+              { scale: b2.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }
             ]
           }
         ]}>
@@ -75,10 +96,9 @@ export default function FabMenu({ onNewNote }: FabMenuProps) {
         <Animated.View style={[
           styles.bubbleWrapper,
           {
-            opacity: animation,
+            opacity: b3,
             transform: [
-              { translateY: animation.interpolate({ inputRange: [0, 1], outputRange: [60, 0] }) },
-              { scale: animation.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }
+              { scale: b3.interpolate({ inputRange: [0, 1], outputRange: [0, 1] }) }
             ]
           }
         ]}>
@@ -118,7 +138,7 @@ export default function FabMenu({ onNewNote }: FabMenuProps) {
 const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 30,
     right: 24,
     width: 60,
     height: 60,

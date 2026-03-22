@@ -12,7 +12,7 @@ export const initDB = async () => {
       CREATE TABLE IF NOT EXISTS notes (
         id INTEGER PRIMARY KEY NOT NULL,
         title TEXT,
-        body TEXT NOT NULL,
+        body TEXT,
         created_at TEXT NOT NULL,
         is_secret INTEGER DEFAULT 0
       );
@@ -41,13 +41,16 @@ export const insertNotes = async (title, body, isSecret = 0) => {
 // 3. Fetch All Data
 export const fetchNotes = async (isSecret = 0) => {
   try {
-    // getAllAsync returns the array of objects directly! 
-    // No more "rows._array" madness.
     const allRows = await db.getAllAsync(
       'SELECT * FROM notes WHERE is_secret = ? ORDER BY created_at DESC',
       [isSecret ? 1 : 0]
     );
-    return allRows;
+    // Map the SQLite 'body' column to the 'content' expected by the UI, and ensure ID is a string
+    return allRows.map(row => ({
+      id: row.id.toString(),
+      title: row.title,
+      content: row.body,
+    }));
   } catch (error) {
     console.error("Error fetching notes:", error);
     return [];

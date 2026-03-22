@@ -1,9 +1,10 @@
 import FabMenu from '@/components/ui/FabMenu';
-import { useNavigation } from 'expo-router';
 import NoteEditorOverlay from '@/components/ui/NoteEditorOverlay';
 import { useTheme } from '@/hooks/ThemeContext';
-import React, { useState, useEffect } from 'react';
+import { useNavigation, useFocusEffect } from 'expo-router';
+import React, { useEffect, useState, useCallback } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { initDB, fetchNotes, insertNotes, updateNotesDB, deleteNotesDB } from '@/util/database';
 
 type Note = {
   id: string;
@@ -12,38 +13,7 @@ type Note = {
 };
 
 export default function HomeScreen() {
-  const [notes, setNotes] = useState<Note[]>([
-    {
-      id: '1',
-      title: 'Grocery list',
-      content: 'Milk, eggs, bread, fruit, vegetables, snacks, coffee',
-    },
-    {
-      id: '2',
-      title: 'Workout plan',
-      content: 'Mon: Chest & triceps\nWed: Back & biceps\nFri: Legs & shoulders',
-    },
-    {
-      id: '3',
-      title: 'Ideas',
-      content: 'Build a notes app clone with colorful tiles and simple UX.',
-    },
-    {
-      id: '4',
-      title: 'Meeting notes',
-      content: 'Discuss roadmap, priorities, and deadlines for Q2 features.',
-    },
-    {
-      id: '5',
-      title: 'Books to read',
-      content: 'Atomic Habits, Deep Work, Clean Code, The Pragmatic Programmer',
-    },
-    {
-      id: '6',
-      title: 'Travel checklist',
-      content: 'Passport, tickets, charger, headphones, toiletries, camera',
-    },
-  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
 
   const navigation = useNavigation();
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -57,6 +27,21 @@ export default function HomeScreen() {
       },
     });
   }, [selectedNote, navigation, colors]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
+
+  const loadData = async () => {
+    try {
+      const data = await fetchNotes();
+      setNotes(data); 
+    } catch (e) {
+      console.error("Failed to load notes", e);
+    }
+  };
 
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
@@ -75,22 +60,22 @@ export default function HomeScreen() {
     handleOpenNote(newNote);
   };
 
-  const handleCloseNote = () => {
-    if (!selectedNote) return;
-    setNotes((prevNotes) => {
-      const exists = prevNotes.some((n) => n.id === selectedNote.id);
+  const handleCloseNote = async () => {
+      if (!selectedNote) return;
+      const exists = notes.some((n) => n.id === selectedNote.id);
       const isBlank = !editTitle.trim() && !editContent.trim();
       if (exists) {
-        if (isBlank) return prevNotes.filter((n) => n.id !== selectedNote.id);
-        return prevNotes.map((n) =>
-          n.id === selectedNote.id ? { ...n, title: editTitle, content: editContent } : n
-        );
+        if (isBlank) {
+          await deleteNotesDB(selectedNote.id);
+        } 
+        await updateNotesDB(selectedNote.id, editTitle, editContent);
       } else {
-        if (!isBlank) return [{ id: selectedNote.id, title: editTitle, content: editContent }, ...prevNotes];
-        return prevNotes;
+        if (!isBlank) {
+          await insertNotes(editTitle, editContent);
+        } 
       }
-    });
-    setSelectedNote(null);
+      loadData();
+      setSelectedNote(null);
   };
 
   const renderNote = ({ item }: { item: Note }) => {

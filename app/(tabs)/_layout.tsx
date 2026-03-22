@@ -2,11 +2,19 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useTheme } from '@/hooks/ThemeContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { Tabs } from 'expo-router';
-import React from 'react';
+import { initDB } from '@/util/database';
+import React, { useEffect } from 'react';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { theme, toggleTheme, colors } = useTheme();
+
+  useEffect(() => {
+    initDB()
+      .then(() => console.log('Database initialized'))
+      .catch(err => console.error('Database failed', err));
+  }, []);
+
   return (
     <Tabs
       screenOptions={{

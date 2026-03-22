@@ -5,6 +5,7 @@ import { useFocusEffect, useNavigation } from 'expo-router';
 import { usePreventScreenCapture } from 'expo-screen-capture';
 import React, { useCallback, useEffect, useState } from 'react';
 import { AppState, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { initDB, fetchNotes, insertNotes, updateNotesDB, deleteNotesDB } from '@/util/database';
 
 type SecretNote = {
   id: string;
@@ -43,6 +44,19 @@ export default function SecretsScreen() {
       subscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [isAuthenticated]);
+
+  const loadData = async () => {
+    try {
+      const data = await fetchNotes(1);
+      setSecretNotes(data);
+    } catch (e) {
+      console.error("Failed to load notes", e);
+    }
+  }
 
   // Provide a completely blank screen when the app is inactive (recent apps menu)
   if (appState !== 'active') {
@@ -97,22 +111,22 @@ export default function SecretsScreen() {
     handleOpenNote(newNote);
   };
 
-  const handleCloseNote = () => {
-    if (!selectedNote) return;
-    setSecretNotes((prevNotes) => {
-      const exists = prevNotes.some((n) => n.id === selectedNote.id);
+  const handleCloseNote = async () => {
+      if (!selectedNote) return;
+      const exists = secretNotes.some((n) => n.id === selectedNote.id);
       const isBlank = !editTitle.trim() && !editContent.trim();
       if (exists) {
-        if (isBlank) return prevNotes.filter((n) => n.id !== selectedNote.id);
-        return prevNotes.map((n) =>
-          n.id === selectedNote.id ? { ...n, title: editTitle, content: editContent } : n
-        );
+        if (isBlank) {
+          await deleteNotesDB(selectedNote.id);
+        } 
+        await updateNotesDB(selectedNote.id, editTitle, editContent);
       } else {
-        if (!isBlank) return [{ id: selectedNote.id, title: editTitle, content: editContent }, ...prevNotes];
-        return prevNotes;
+        if (!isBlank) {
+          await insertNotes(editTitle, editContent, 1);
+        } 
       }
-    });
-    setSelectedNote(null);
+      loadData();
+      setSelectedNote(null);
   };
 
   const renderNote = ({ item }: { item: SecretNote }) => {
