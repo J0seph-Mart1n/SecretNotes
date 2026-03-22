@@ -13,6 +13,7 @@ export const initDB = async () => {
         id INTEGER PRIMARY KEY NOT NULL,
         title TEXT,
         body TEXT,
+        is_list INTEGER DEFAULT 0,
         created_at TEXT NOT NULL,
         is_secret INTEGER DEFAULT 0
       );
@@ -24,13 +25,13 @@ export const initDB = async () => {
 };
 
 // 2. Insert Data
-export const insertNotes = async (title, body, isSecret = 0) => {
+export const insertNotes = async (title, body, isSecret = 0, isList = 0) => {
   try {
     const date = new Date().toISOString();
     // runAsync is for INSERT/UPDATE/DELETE (writes)
     const result = await db.runAsync(
-      'INSERT INTO notes (title, body, created_at, is_secret) VALUES (?, ?, ?, ?)',
-      [title, body, date, isSecret ? 1 : 0]
+      'INSERT INTO notes (title, body, created_at, is_secret, is_list) VALUES (?, ?, ?, ?, ?)',
+      [title, body, date, isSecret ? 1 : 0, isList ? 1 : 0]
     );
     return result;
   } catch (error) {
@@ -46,11 +47,18 @@ export const fetchNotes = async (isSecret = 0) => {
       [isSecret ? 1 : 0]
     );
     // Map the SQLite 'body' column to the 'content' expected by the UI, and ensure ID is a string
-    return allRows.map(row => ({
-      id: row.id.toString(),
-      title: row.title,
-      content: row.body,
-    }));
+    return allRows.map(row => {
+      let parsedContent = row.body;
+      if (row.is_list && typeof row.body === 'string') {
+        try { parsedContent = JSON.parse(row.body); } catch(e) {}
+      }
+      return {
+        id: row.id.toString(),
+        title: row.title,
+        content: parsedContent,
+        isList: Boolean(row.is_list)
+      };
+    });
   } catch (error) {
     console.error("Error fetching notes:", error);
     return [];
@@ -58,11 +66,11 @@ export const fetchNotes = async (isSecret = 0) => {
 };
 
 // 4. Update Data
-export const updateNotesDB = async (id, title, body) => {
+export const updateNotesDB = async (id, title, body, isList = 0) => {
   try {
     await db.runAsync(
-      'UPDATE notes SET title = ?, body = ? WHERE id = ?',
-      [title, body, id]
+      'UPDATE notes SET title = ?, body = ?, is_list = ? WHERE id = ?',
+      [title, body, isList ? 1 : 0, id]
     );
   } catch (error) {
     console.error("Error updating notes:", error);

@@ -1,15 +1,23 @@
 import FabMenu from '@/components/ui/FabMenu';
 import NoteEditorOverlay from '@/components/ui/NoteEditorOverlay';
+import ListEditorOverlay from '@/components/ui/ListEditorOverlay';
 import { useTheme } from '@/hooks/ThemeContext';
 import { useNavigation, useFocusEffect } from 'expo-router';
 import React, { useEffect, useState, useCallback } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { fetchNotes, insertNotes, updateNotesDB, deleteNotesDB } from '@/util/database';
 
+type TaskItem = {
+  id: string;
+  text: string;
+  isCompleted: boolean;
+};
+
 type Note = {
   id: string;
   title: string;
-  content: string;
+  content: string | TaskItem[];
+  isList: boolean;
 };
 
 type NotesListScreenProps = {
@@ -42,7 +50,7 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
   const loadData = async () => {
     try {
       const data = await fetchNotes(isSecret ? 1 : 0);
-      setNotes(data); 
+      setNotes(data as Note[]); 
     } catch (e) {
       console.error("Failed to load notes", e);
     }
@@ -50,35 +58,52 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
 
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [editTasks, setEditTasks] = useState<TaskItem[]>([]);
 
   const handleOpenNote = (note: Note) => {
-    setEditTitle(note.title);
-    setEditContent(note.content);
+    setEditTitle(note.title || '');
+    if (note.isList) {
+      setEditTasks(Array.isArray(note.content) ? note.content : []);
+      setEditContent('');
+    } else {
+      setEditContent(typeof note.content === 'string' ? note.content : '');
+      setEditTasks([]);
+    }
     setSelectedNote(note);
   };
 
-  const handleNewNote = () => {
-    const newNote = {
-      id: Date.now().toString(),
-      title: '',
-      content: '',
-    };
-    handleOpenNote(newNote);
+  const handleNewTextNote = () => {
+    handleOpenNote({ id: Date.now().toString(), title: '', content: '', isList: false });
+  };
+
+  const handleNewListNote = () => {
+    handleOpenNote({ id: Date.now().toString(), title: '', content: [{id: Date.now().toString(), text: '', isCompleted: false}], isList: true });
   };
 
   const handleCloseNote = async () => {
     if (!selectedNote) return;
     const exists = notes.some((n) => n.id === selectedNote.id);
-    const isBlank = !editTitle.trim() && !editContent.trim();
+    
+    const isBlankText = !selectedNote.isList && !editTitle.trim() && !editContent.trim();
+    
+    // Clean up completely empty task rows before saving
+    const validTasks = editTasks.filter(task => task.text.trim().length > 0);
+    
+    const isBlankList = selectedNote.isList && !editTitle.trim() && validTasks.length === 0;
+    const isBlank = isBlankText || isBlankList;
+
+    const finalBody = selectedNote.isList ? JSON.stringify(validTasks) : editContent;
+    const finalIsList = selectedNote.isList ? 1 : 0;
+
     if (exists) {
       if (isBlank) {
         await deleteNotesDB(selectedNote.id);
       } else {
-        await updateNotesDB(selectedNote.id, editTitle, editContent);
+        await updateNotesDB(selectedNote.id, editTitle, finalBody, finalIsList);
       }
     } else {
       if (!isBlank) {
-        await insertNotes(editTitle, editContent, isSecret ? 1 : 0);
+        await insertNotes(editTitle, finalBody, isSecret ? 1 : 0, finalIsList);
       } 
     }
     loadData();
@@ -86,13 +111,21 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
   };
 
   const renderNote = ({ item }: { item: Note }) => {
+    let previewContent = '';
+    if (item.isList && Array.isArray(item.content)) {
+      // Create a nice preview of the checklist items
+      previewContent = item.content.map(task => `${task.isCompleted ? '✓' : '○'} ${task.text}`).join('\n');
+    } else {
+      previewContent = String(item.content || '');
+    }
+
     return (
       <TouchableOpacity activeOpacity={0.8} style={styles.noteTile} onPress={() => handleOpenNote(item)}>
         <Text style={styles.noteTitle} numberOfLines={1}>
           {item.title}
         </Text>
         <Text style={styles.noteContent} numberOfLines={6}>
-          {item.content}
+          {previewContent}
         </Text>
       </TouchableOpacity>
     );
@@ -114,16 +147,25 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
         showsVerticalScrollIndicator={false}
       />
 
-      <FabMenu onNewNote={handleNewNote} />
+      <FabMenu onNewNote={handleNewTextNote} onNewListNote={handleNewListNote} />
 
       <NoteEditorOverlay
-        selectedNote={selectedNote}
+        selectedNote={selectedNote && !selectedNote.isList ? (selectedNote as any) : null}
         editTitle={editTitle}
         setEditTitle={setEditTitle}
         editContent={editContent}
         setEditContent={setEditContent}
         onClose={handleCloseNote}
         contentPlaceholder={contentPlaceholder || "Note"}
+      />
+
+      <ListEditorOverlay
+        isOpen={!!selectedNote && selectedNote.isList}
+        listTitle={editTitle}
+        setListTitle={setEditTitle}
+        tasks={editTasks}
+        setTasks={setEditTasks}
+        onClose={handleCloseNote}
       />
     </View>
   );

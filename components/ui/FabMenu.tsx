@@ -4,9 +4,10 @@ import { Animated, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'r
 
 type FabMenuProps = {
   onNewNote?: () => void;
+  onNewListNote?: () => void;
 };
 
-export default function FabMenu({ onNewNote }: FabMenuProps) {
+export default function FabMenu({ onNewNote, onNewListNote }: FabMenuProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const animation = useRef(new Animated.Value(0)).current; // Background and FAB rotation
   const b1 = useRef(new Animated.Value(0)).current; // Drawing (top)
@@ -87,7 +88,13 @@ export default function FabMenu({ onNewNote }: FabMenuProps) {
             ]
           }
         ]}>
-          <TouchableOpacity style={styles.bubbleItem}>
+          <TouchableOpacity 
+            style={styles.bubbleItem}
+            onPress={() => {
+              toggleMenu();
+              if (onNewListNote) onNewListNote();
+            }}
+          >
             <Ionicons name="list-outline" size={20} color="#fff" />
             <Text style={styles.menuItemText}>List</Text>
           </TouchableOpacity>

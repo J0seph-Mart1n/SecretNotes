@@ -19,7 +19,7 @@ type ListNoteOverlayProps = {
   onClose: () => void;
 };
 
-export default function ListNoteOverlaySample({
+export default function ListNoteOverlay({
   isOpen,
   listTitle,
   setListTitle,
@@ -127,7 +127,6 @@ export default function ListNoteOverlaySample({
           <TouchableOpacity onPress={handleClose} style={styles.backButton}>
             <Ionicons name="arrow-back" size={28} color="#ffffff" />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Checklist</Text>
         </View>
 
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.editorBody}>
@@ -146,13 +145,13 @@ export default function ListNoteOverlaySample({
             keyExtractor={(item) => item.id}
             renderItem={renderTask}
             contentContainerStyle={styles.taskList}
+            ListFooterComponent={
+              <TouchableOpacity style={styles.addTaskButton} onPress={addTask}>
+                <Ionicons name="add" size={24} color={colors.text} />
+                <Text style={[styles.addTaskText, { color: colors.text }]}>List Item</Text>
+              </TouchableOpacity>
+            }
           />
-
-          {/* Add New Task Button */}
-          <TouchableOpacity style={styles.addTaskButton} onPress={addTask}>
-            <Ionicons name="add" size={24} color={colors.text} />
-            <Text style={[styles.addTaskText, { color: colors.text }]}>List Item</Text>
-          </TouchableOpacity>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </Animated.View>
