@@ -4,6 +4,8 @@ import NoteEditorOverlay from '@/components/Common/NoteEditorOverlay';
 import { useTheme } from '@/hooks/ThemeContext';
 import { deleteNotesDB, fetchNotes, insertNotes, updateNotesDB } from '@/constants/database';
 import { useFocusEffect, useNavigation } from 'expo-router';
+import { DrawerActions } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -134,6 +136,9 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
   return (
     <View style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity style={styles.menuIcon} onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
+          <Ionicons name="menu" size={32} color={colors.text} />
+        </TouchableOpacity>
         <Text style={[styles.appTitle, { color: colors.text }]}>{title}</Text>
       </View>
 
@@ -180,6 +185,11 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIcon: {
+    marginRight: 16,
   },
   appTitle: {
     fontSize: 32,

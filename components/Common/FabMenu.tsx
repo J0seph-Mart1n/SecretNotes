@@ -16,7 +16,7 @@ export default function FabMenu({ onNewNote, onNewListNote }: FabMenuProps) {
 
   useEffect(() => {
     const toVal = isMenuOpen ? 1 : 0;
-    
+
     // Animate background overlay & fab rotation immediately
     Animated.spring(animation, {
       toValue: toVal,
@@ -88,7 +88,7 @@ export default function FabMenu({ onNewNote, onNewListNote }: FabMenuProps) {
             ]
           }
         ]}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.bubbleItem}
             onPress={() => {
               toggleMenu();
@@ -109,8 +109,8 @@ export default function FabMenu({ onNewNote, onNewListNote }: FabMenuProps) {
             ]
           }
         ]}>
-          <TouchableOpacity 
-            style={styles.bubbleItem} 
+          <TouchableOpacity
+            style={styles.bubbleItem}
             onPress={() => {
               toggleMenu();
               if (onNewNote) onNewNote();
@@ -145,8 +145,8 @@ export default function FabMenu({ onNewNote, onNewListNote }: FabMenuProps) {
 const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
-    bottom: 30,
-    right: 24,
+    bottom: 50,
+    right: 30,
     width: 60,
     height: 60,
     borderRadius: 30,

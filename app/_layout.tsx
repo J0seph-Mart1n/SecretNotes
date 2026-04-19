@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -7,7 +8,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ThemeProvider as AppThemeProvider } from '@/hooks/ThemeContext';
 
 export const unstable_settings = {
-  anchor: '(tabs)',
+  anchor: '(drawer)',
 };
 
 export default function RootLayout() {
@@ -15,9 +16,9 @@ export default function RootLayout() {
 
   return (
     <AppThemeProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
+      <Stack>
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+      </Stack>
     </AppThemeProvider>
   );
 }

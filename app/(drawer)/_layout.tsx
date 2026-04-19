@@ -2,8 +2,9 @@ import { IconSymbol } from '@/components/icon-symbol';
 import { useTheme } from '@/hooks/ThemeContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { initDB } from '@/constants/database';
-import { Tabs } from 'expo-router';
+import { Drawer } from 'expo-router/drawer';
 import React, { useEffect } from 'react';
+import CustomDrawer from '@/components/Common/CustomDrawer';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -16,30 +17,41 @@ export default function TabLayout() {
   }, []);
 
   return (
-    <Tabs
+    <Drawer
+      drawerContent={(props) => <CustomDrawer {...props} />}
       screenOptions={{
-        tabBarStyle: {
+        drawerStyle: {
           backgroundColor: colors.card,
-          borderTopColor: colors.border,
+          width: 280,
         },
-        tabBarActiveTintColor: colors.green,
-        tabBarInactiveTintColor: colors.subText,
+        drawerActiveBackgroundColor: colors.green + '20',
+        drawerActiveTintColor: colors.green,
+        drawerInactiveTintColor: colors.subText,
+        drawerItemStyle: {
+          borderRadius: 50,
+          marginVertical: 4,
+        },
+        drawerLabelStyle: {
+          fontSize: 16,
+          fontWeight: '600',
+          marginLeft: -10,
+        },
         headerShown: false,
       }}>
-      <Tabs.Screen
+      <Drawer.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={30} name="house.fill" color={color} />,
+          drawerIcon: ({ color }) => <IconSymbol size={30} name="house.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
+      <Drawer.Screen
         name="secrets"
         options={{
           title: 'Secrets',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="lock.fill" color={color} />,
+          drawerIcon: ({ color }) => <IconSymbol size={28} name="lock.fill" color={color} />,
         }}
       />
-    </Tabs>
+    </Drawer>
   );
 }
