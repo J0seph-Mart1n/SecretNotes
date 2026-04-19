@@ -2,6 +2,8 @@ import { useTheme } from '@/hooks/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useNavigation } from 'expo-router';
+import { DrawerActions } from '@react-navigation/native';
 
 const SECRET_PIN = '1234'; // Default PIN
 const PIN_LENGTH = 4;
@@ -14,6 +16,7 @@ export default function PinEntryScreen({ onUnlock }: PinEntryScreenProps) {
   const [pinInput, setPinInput] = useState('');
   const [error, setError] = useState('');
   const { colors } = useTheme();
+  const navigation = useNavigation();
 
   // Automatically check PIN when it reaches the required length
   useEffect(() => {
@@ -43,10 +46,18 @@ export default function PinEntryScreen({ onUnlock }: PinEntryScreenProps) {
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.appTitle, { color: colors.text }]}>Enter PIN</Text>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.menuIcon} onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
+          <Ionicons name="menu" size={32} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Secrets</Text>
+      </View>
 
-      {/* Visual Dots for PIN length */}
-      <View style={styles.dotsContainer}>
+      <View style={styles.contentContainer}>
+        <Text style={[styles.promptTitle, { color: colors.text }]}>Enter PIN</Text>
+
+        {/* Visual Dots for PIN length */}
+        <View style={styles.dotsContainer}>
         {[...Array(PIN_LENGTH)].map((_, i) => {
           const isFilled = i < pinInput.length;
           return (
@@ -101,6 +112,7 @@ export default function PinEntryScreen({ onUnlock }: PinEntryScreenProps) {
           <Ionicons name="backspace-outline" size={32} color={colors.text} />
         </TouchableOpacity>
       </View>
+      </View>
     </View>
   );
 }
@@ -109,10 +121,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
-    justifyContent: 'center',
+  },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  appTitle: {
+  menuIcon: {
+    marginRight: 16,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#ffffff',
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 80,
+  },
+  promptTitle: {
     fontSize: 28,
     fontWeight: '600',
     color: '#ffffff',

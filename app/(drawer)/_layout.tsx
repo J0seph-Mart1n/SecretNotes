@@ -52,6 +52,13 @@ export default function TabLayout() {
           drawerIcon: ({ color }) => <IconSymbol size={28} name="lock.fill" color={color} />,
         }}
       />
+      <Drawer.Screen
+        name="diary"
+        options={{
+          title: 'Diary',
+          drawerIcon: ({ color }) => <IconSymbol size={28} name="lock.fill" color={color} />,
+        }}
+      />
     </Drawer>
   );
 }

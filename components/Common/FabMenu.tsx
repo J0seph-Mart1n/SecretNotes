@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   bubblesContainer: {
     position: 'absolute',
-    bottom: 96,
+    bottom: 110,
     right: 24,
     width: 160,
     alignItems: 'flex-end',

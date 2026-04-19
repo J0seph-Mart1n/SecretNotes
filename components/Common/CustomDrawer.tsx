@@ -9,7 +9,7 @@ export default function CustomDrawer(props: any) {
   return (
     <DrawerContentScrollView {...props} style={{ backgroundColor: colors.card }}>
       <View style={[styles.headerContainer, { borderBottomColor: colors.border }]}>
-        <Text style={[styles.headerText, { color: colors.text }]}>Secret Notes</Text>
+        <Text style={[styles.headerText, { color: colors.text }]}>My Notes</Text>
       </View>
       <View style={styles.listContainer}>
         <DrawerItemList {...props} />

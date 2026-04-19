@@ -8,6 +8,7 @@ import { DrawerActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TaskItem = {
   id: string;
@@ -134,7 +135,7 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.menuIcon} onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
           <Ionicons name="menu" size={32} color={colors.text} />
@@ -172,7 +173,7 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
         setTasks={setEditTasks}
         onClose={handleCloseNote}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
   },
   header: {
-    paddingTop: 60,
+    paddingTop: 20,
     paddingHorizontal: 20,
     paddingBottom: 16,
     flexDirection: 'row',
