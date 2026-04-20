@@ -42,7 +42,7 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'light',
-  toggleTheme: () => {},
+  toggleTheme: () => { },
   colors: themeColors.light,
 });
 
@@ -53,7 +53,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   // Load saved preference on startup
   useEffect(() => {
     const loadTheme = async () => {
-    setTheme('dark');
+      setTheme('dark');
     };
     loadTheme();
   }, []);

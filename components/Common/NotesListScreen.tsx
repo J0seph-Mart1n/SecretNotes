@@ -2,26 +2,14 @@ import FabMenu from '@/components/Common/FabMenu';
 import ListEditorOverlay from '@/components/Common/ListEditorOverlay';
 import NoteEditorOverlay from '@/components/Common/NoteEditorOverlay';
 import { useTheme } from '@/hooks/ThemeContext';
-import { deleteNotesDB, fetchNotes, insertNotes, updateNotesDB } from '@/constants/database';
 import { useFocusEffect, useNavigation } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-type TaskItem = {
-  id: string;
-  text: string;
-  isCompleted: boolean;
-};
-
-type Note = {
-  id: string;
-  title: string;
-  content: string | TaskItem[];
-  isList: boolean;
-};
+import SelectedNote from './SelectedNote';
+import PageHeader from './PageHeader';
+import NoteRender from './NoteRender';
+import { useNoteHandles, Note } from '@/functions/NoteHandles';
 
 type NotesListScreenProps = {
   title: string;
@@ -30,10 +18,28 @@ type NotesListScreenProps = {
 };
 
 export default function NotesListScreen({ title, isSecret, contentPlaceholder }: NotesListScreenProps) {
-  const [notes, setNotes] = useState<Note[]>([]);
   const navigation = useNavigation();
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const { colors } = useTheme();
+
+  const {
+    notes,
+    selectedNote,
+    selectedNoteIds,
+    setSelectedNoteIds,
+    editTitle,
+    setEditTitle,
+    editContent,
+    setEditContent,
+    editTasks,
+    setEditTasks,
+    loadData,
+    toggleSelection,
+    handleDeleteSelected,
+    handleOpenNote,
+    handleNewTextNote,
+    handleNewListNote,
+    handleCloseNote
+  } = useNoteHandles(isSecret);
 
   useEffect(() => {
     navigation.setOptions({
@@ -50,69 +56,6 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
     }, [isSecret])
   );
 
-  const loadData = async () => {
-    try {
-      const data = await fetchNotes(isSecret ? 1 : 0);
-      setNotes(data as Note[]);
-    } catch (e) {
-      console.error("Failed to load notes", e);
-    }
-  };
-
-  const [editTitle, setEditTitle] = useState('');
-  const [editContent, setEditContent] = useState('');
-  const [editTasks, setEditTasks] = useState<TaskItem[]>([]);
-
-  const handleOpenNote = (note: Note) => {
-    setEditTitle(note.title || '');
-    if (note.isList) {
-      setEditTasks(Array.isArray(note.content) ? note.content : []);
-      setEditContent('');
-    } else {
-      setEditContent(typeof note.content === 'string' ? note.content : '');
-      setEditTasks([]);
-    }
-    setSelectedNote(note);
-  };
-
-  const handleNewTextNote = () => {
-    handleOpenNote({ id: Date.now().toString(), title: '', content: '', isList: false });
-  };
-
-  const handleNewListNote = () => {
-    handleOpenNote({ id: Date.now().toString(), title: '', content: [{ id: Date.now().toString(), text: '', isCompleted: false }], isList: true });
-  };
-
-  const handleCloseNote = async () => {
-    if (!selectedNote) return;
-    const exists = notes.some((n) => n.id === selectedNote.id);
-
-    const isBlankText = !selectedNote.isList && !editTitle.trim() && !editContent.trim();
-
-    // Clean up completely empty task rows before saving
-    const validTasks = editTasks.filter(task => task.text.trim().length > 0);
-
-    const isBlankList = selectedNote.isList && !editTitle.trim() && validTasks.length === 0;
-    const isBlank = isBlankText || isBlankList;
-
-    const finalBody = selectedNote.isList ? JSON.stringify(validTasks) : editContent;
-    const finalIsList = selectedNote.isList ? 1 : 0;
-
-    if (exists) {
-      if (isBlank) {
-        await deleteNotesDB(selectedNote.id);
-      } else {
-        await updateNotesDB(selectedNote.id, editTitle, finalBody, finalIsList);
-      }
-    } else {
-      if (!isBlank) {
-        await insertNotes(editTitle, finalBody, isSecret ? 1 : 0, finalIsList);
-      }
-    }
-    loadData();
-    setSelectedNote(null);
-  };
-
   const renderNote = ({ item }: { item: Note }) => {
     let previewContent = '';
     if (item.isList && Array.isArray(item.content)) {
@@ -122,26 +65,27 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
       previewContent = String(item.content || '');
     }
 
+    const isSelected = selectedNoteIds.includes(item.id);
+
     return (
-      <TouchableOpacity activeOpacity={0.8} style={styles.noteTile} onPress={() => handleOpenNote(item)}>
-        <Text style={styles.noteTitle} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text style={styles.noteContent} numberOfLines={6}>
-          {previewContent}
-        </Text>
-      </TouchableOpacity>
+      <NoteRender 
+        item={item}
+        isSelected={isSelected}
+        colors={colors}
+        handleOpenNote={handleOpenNote}
+        toggleSelection={toggleSelection}
+        previewContent={previewContent}
+      />
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuIcon} onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
-          <Ionicons name="menu" size={32} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.appTitle, { color: colors.text }]}>{title}</Text>
-      </View>
+      {selectedNoteIds.length > 0 ? (
+        <SelectedNote selectedNoteIds={selectedNoteIds} colors={colors} handleDeleteSelected={handleDeleteSelected} setSelectedNoteIds={setSelectedNoteIds} />
+      ) : (
+        <PageHeader title={title} navigation={navigation} />
+      )}
 
       <FlatList
         data={notes}
@@ -182,21 +126,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#121212',
   },
-  header: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuIcon: {
-    marginRight: 16,
-  },
-  appTitle: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
   listContent: {
     paddingHorizontal: 10,
     paddingBottom: 20,
@@ -204,25 +133,5 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: 'space-between',
     marginBottom: 12,
-  },
-  noteTile: {
-    flex: 1,
-    marginHorizontal: 6,
-    borderRadius: 14,
-    padding: 12,
-    backgroundColor: '#1f1f1f',
-    borderWidth: 1,
-    borderColor: '#2c2c2c',
-  },
-  noteTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginBottom: 6,
-  },
-  noteContent: {
-    fontSize: 14,
-    color: '#d0d0d0',
-    lineHeight: 20,
   },
 });
