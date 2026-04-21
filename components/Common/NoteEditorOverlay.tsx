@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
-import { Animated, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, BackHandler, KeyboardAvoidingView, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type NoteEditorOverlayProps = {
@@ -35,6 +35,19 @@ export default function NoteEditorOverlay({
       }).start();
     }
   }, [selectedNote, openAnimation]);
+
+  // Intercept Android hardware back button
+  useEffect(() => {
+    if (!selectedNote) return;
+
+    const backAction = () => {
+      handleClose();
+      return true; // Prevent default (app exit)
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => subscription.remove();
+  }, [selectedNote]);
 
   const handleClose = () => {
     Animated.timing(openAnimation, {

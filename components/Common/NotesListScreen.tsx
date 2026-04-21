@@ -3,8 +3,9 @@ import ListEditorOverlay from '@/components/Common/ListEditorOverlay';
 import NoteEditorOverlay from '@/components/Common/NoteEditorOverlay';
 import { useTheme } from '@/hooks/ThemeContext';
 import { useFocusEffect, useNavigation } from 'expo-router';
-import React, { useCallback, useEffect } from 'react';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View, TextInput } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SelectedNote from './SelectedNote';
 import PageHeader from './PageHeader';
@@ -41,6 +42,21 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
     handleCloseNote
   } = useNoteHandles(isSecret);
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredNotes = notes.filter(note => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    if (note.title && note.title.toLowerCase().includes(q)) return true;
+    if (typeof note.content === 'string') {
+      return note.content.toLowerCase().includes(q);
+    }
+    if (Array.isArray(note.content)) {
+      return note.content.some(task => task.text.toLowerCase().includes(q));
+    }
+    return false;
+  });
+
   useEffect(() => {
     navigation.setOptions({
       tabBarStyle: selectedNote ? { display: 'none' } : {
@@ -68,7 +84,7 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
     const isSelected = selectedNoteIds.includes(item.id);
 
     return (
-      <NoteRender 
+      <NoteRender
         item={item}
         isSelected={isSelected}
         colors={colors}
@@ -87,8 +103,24 @@ export default function NotesListScreen({ title, isSecret, contentPlaceholder }:
         <PageHeader title={title} navigation={navigation} />
       )}
 
+      <View style={[styles.searchContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Ionicons name="search" size={20} color={colors.subText} style={styles.searchIcon} />
+        <TextInput
+          style={[styles.searchInput, { color: colors.text }]}
+          placeholder="Search notes..."
+          placeholderTextColor={colors.placeholder}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={20} color={colors.subText} />
+          </TouchableOpacity>
+        )}
+      </View>
+
       <FlatList
-        data={notes}
+        data={filteredNotes}
         keyExtractor={(item) => item.id}
         renderItem={renderNote}
         numColumns={2}
@@ -125,6 +157,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#121212',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 32,
+    borderWidth: 1,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 18,
   },
   listContent: {
     paddingHorizontal: 10,

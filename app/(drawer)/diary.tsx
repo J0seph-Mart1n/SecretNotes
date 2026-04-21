@@ -18,23 +18,9 @@ import { useNavigation } from 'expo-router';
 import { DrawerActions } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
-// Extracted Theme Colors
-const colors = {
-  surface: '#f9f6f5',
-  onSurface: '#2f2f2e',
-  onSurfaceVariant: '#5c5b5b',
-  surfaceContainerLow: '#f3f0ef',
-  surfaceContainerHighest: '#dfdcdc',
-  surfaceContainerLowest: '#ffffff',
-  primary: '#0058bc',
-  accent: '#6750A4',
-  accentLight: 'rgba(103, 80, 164, 0.1)',
-  outlineVariant: '#afadac',
-  highlightBg: 'rgba(109, 159, 255, 0.2)', // #6d9fff/20
-  highlightText: '#00214f',
-  text: '#ffffff'
-};
+import PageHeader from '@/components/Common/PageHeader';
+import { DiaryColors } from '@/constants/Colors';
+import CalenderPicker from '@/components/DiaryPage/CalenderPicker';
 
 // Mock Data
 const journalEntries =[
@@ -76,42 +62,14 @@ export default function DiaryScreen() {
       <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
       {/* Sticky Top Gradient Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuIcon} onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
-          <Ionicons name="menu" size={32} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.appTitle, { color: colors.text }]}>My Diary</Text>
-      </View>
+      <PageHeader title="Diary" navigation={navigation} />
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
       >
         {/* Calendar Section */}
-        <View style={styles.section}>
-          <View style={styles.calendarHeader}>
-            <View>
-              <Text style={styles.timelineLabel}>TIMELINE</Text>
-              <Text style={styles.monthTitle}>
-                {date.toLocaleDateString(undefined, {day: '2-digit', month: 'long', year: 'numeric' })}
-              </Text>
-            </View>
-            <TouchableOpacity style={styles.dateSelectorButton} onPress={() => setShowPicker(true)}>
-              <MaterialIcons name="calendar-today" size={20} color={colors.surfaceContainerLowest} />
-              <Text style={styles.dateSelectorText}>Pick Date</Text>
-            </TouchableOpacity>
-          </View>
-
-          
-          {showPicker && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="default"
-              onChange={onChange}
-            />
-          )}
-        </View>
+        <CalenderPicker date={date} showPicker={showPicker} setShowPicker={setShowPicker} onChange={onChange} />
 
         {/* Journal Entries Section */}
         <View style={styles.section}>
@@ -194,7 +152,7 @@ export default function DiaryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: DiaryColors.surface,
   },
   header: {
     paddingTop: 20,
@@ -228,7 +186,7 @@ const styles = StyleSheet.create({
   timelineLabel: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.text,
+    color: DiaryColors.text,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4,
@@ -236,25 +194,25 @@ const styles = StyleSheet.create({
   monthTitle: {
     fontSize: 32,
     fontWeight: '700',
-    color: colors.text,
+    color: DiaryColors.text,
     letterSpacing: -0.5,
   },
   dateSelectorButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: DiaryColors.primary,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
   },
   dateSelectorText: {
-    color: colors.surfaceContainerLowest,
+    color: DiaryColors.surfaceContainerLowest,
     fontSize: 14,
     fontWeight: '600',
   },
   selectedDateContainer: {
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: DiaryColors.surfaceContainerLow,
     padding: 16,
     borderRadius: 16,
     marginTop: -10,
@@ -277,7 +235,7 @@ const styles = StyleSheet.create({
   dividerText: {
     fontSize: 12,
     fontWeight: '700',
-    color: colors.onSurfaceVariant,
+    color: DiaryColors.onSurfaceVariant,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
   },
@@ -285,7 +243,7 @@ const styles = StyleSheet.create({
     gap: 24,
   },
   entryCard: {
-    backgroundColor: colors.surfaceContainerLowest,
+    backgroundColor: DiaryColors.surfaceContainerLowest,
     borderRadius: 24,
     padding: 24,
     shadowColor: '#2f2f2e',
@@ -318,17 +276,17 @@ const styles = StyleSheet.create({
   entryTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.onSurface,
+    color: DiaryColors.onSurface,
     marginBottom: 2,
   },
   entryDate: {
     fontSize: 12,
-    color: colors.onSurfaceVariant,
+    color: DiaryColors.onSurfaceVariant,
   },
   entrySnippet: {
     fontSize: 15,
     lineHeight: 24,
-    color: colors.onSurfaceVariant,
+    color: DiaryColors.onSurfaceVariant,
     marginBottom: 16,
   },
   tagsRow: {
@@ -336,7 +294,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tagPill: {
-    backgroundColor: colors.surfaceContainerLow,
+    backgroundColor: DiaryColors.surfaceContainerLow,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -344,7 +302,7 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 10,
     fontWeight: '700',
-    color: colors.onSurfaceVariant,
+    color: DiaryColors.onSurfaceVariant,
     textTransform: 'uppercase',
   },
   featuredImage: {
@@ -359,7 +317,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   editButton: {
-    backgroundColor: colors.accentLight,
+    backgroundColor: DiaryColors.accentLight,
     padding: 8,
     borderRadius: 20,
   },
@@ -370,10 +328,10 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 24,
-    backgroundColor: colors.primary,
+    backgroundColor: DiaryColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.primary,
+    shadowColor: DiaryColors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 16,
@@ -407,20 +365,20 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   navItemActive: {
-    backgroundColor: colors.accentLight,
+    backgroundColor: DiaryColors.accentLight,
     transform: [{ scale: 1.1 }],
   },
   navItemText: {
     fontSize: 11,
     fontWeight: '500',
-    color: colors.onSurfaceVariant,
+    color: DiaryColors.onSurfaceVariant,
     marginTop: 4,
     letterSpacing: 0.5,
   },
   navItemTextActive: {
     fontSize: 11,
     fontWeight: '700',
-    color: colors.accent,
+    color: DiaryColors.accent,
     marginTop: 4,
     letterSpacing: 0.5,
   },

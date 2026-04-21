@@ -1,7 +1,7 @@
 import { useTheme } from '@/hooks/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
-import { Animated, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Animated, BackHandler, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 type TaskItem = {
@@ -51,6 +51,19 @@ export default function ListNoteOverlay({
             if (finished) onClose();
         });
     };
+
+    // Intercept Android hardware back button
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const backAction = () => {
+            handleClose();
+            return true; // Prevent default (app exit)
+        };
+
+        const subscription = BackHandler.addEventListener('hardwareBackPress', backAction);
+        return () => subscription.remove();
+    }, [isOpen]);
 
     // --- Task Operations ---
     const toggleTask = (id: string) => {
@@ -148,7 +161,7 @@ export default function ListNoteOverlay({
                         ListFooterComponent={
                             <TouchableOpacity style={styles.addTaskButton} onPress={addTask}>
                                 <Ionicons name="add" size={24} color={colors.text} />
-                                <Text style={[styles.addTaskText, { color: colors.text }]}>List Item</Text>
+                                <Text style={[styles.addTaskText, { color: colors.text }]}>Add Item</Text>
                             </TouchableOpacity>
                         }
                     />

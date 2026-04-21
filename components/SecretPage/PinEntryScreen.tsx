@@ -3,7 +3,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from 'expo-router';
-import { DrawerActions } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import PageHeader from '../Common/PageHeader';
 
 const SECRET_PIN = '1234'; // Default PIN
 const PIN_LENGTH = 4;
@@ -45,13 +46,8 @@ export default function PinEntryScreen({ onUnlock }: PinEntryScreenProps) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.menuIcon} onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}>
-          <Ionicons name="menu" size={32} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Secrets</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <PageHeader title="Secrets" navigation={navigation}/>
 
       <View style={styles.contentContainer}>
         <Text style={[styles.promptTitle, { color: colors.text }]}>Enter PIN</Text>
@@ -113,7 +109,7 @@ export default function PinEntryScreen({ onUnlock }: PinEntryScreenProps) {
         </TouchableOpacity>
       </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
